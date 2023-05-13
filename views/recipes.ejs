@@ -1,0 +1,70 @@
+<%- include("parts/header") -%>
+
+
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <script>
+                document.write('<a href="' + document.referrer + '">zurück</a>');
+            </script>
+
+            <h2>Rezepte für</h2>
+            <select id="category">
+                <% for(let i=0; i < categories.categories.length; i++) { %>
+                    <option value="<%= i %>"><%= categories.categories[i] %></option>
+                <% } %>
+            </select>
+            <p id="recipe_title"><b>Ausgewähltes Rezept:</b></p>
+            <select id="recipes">
+                <% for(let j=0; j < recipes.recipes[0].recipes.length; j++) { %>
+                        <option value="<%= j %>">
+                            <%= recipes.recipes[0].recipes[j].name %>
+                        </option>
+                <% } %>
+            </select>
+            <ul>
+            </ul>
+            <div class="content">
+                <%- include("parts/recipe_content", {recipes: recipes}) -%>
+            </div>
+            <button type="submit" id="addRecipe">Neues Rezept hinzufügen</button>
+
+        </div>
+        
+    </div>
+
+    <script>
+        let category = document.querySelector("#category");
+        let recipeList = document.querySelector("#recipes")
+        let recipeIngredients = document.querySelector("#ingredients")
+        let recipeNotes = document.querySelector("#notes")
+        let recipesJSON = "<%= JSON.stringify(recipes) %>";
+
+        recipesJSON = JSON.parse(recipesJSON.replaceAll("&#34;","\""));
+
+        category.addEventListener("change", function() {
+            recipeList.innerHTML = "";
+            console.log(recipesJSON.recipes[category.selectedIndex].recipes.length);
+            for(let j=0; j < recipesJSON.recipes[category.selectedIndex].recipes.length; j++) {
+                recipeList.innerHTML += "<option value="+ j + ">" +
+                    recipesJSON.recipes[category.selectedIndex].recipes[j].name +
+                "</option>";
+            }
+            
+            fetch("/showrecipe", {
+                method:     "post",
+                headers:    {"Content-Type": "application/json"},
+                body:       JSON.stringify({ recipes: recipesJSON }) // ids übergeben, um entsprechend json vom server zu laden
+            })
+            .then( res => res.json() )
+            //.then( recipes => reloadPage(recipes) )
+            .catch( err => console.log(err)) ;
+        });
+
+        recipeList.addEventListener("change", function(){
+            // Neues Rezept laden
+            // Aktualisierse je nach gewähltem Rezept die Zutaten, Beschreibung und die Notizen des Rezepts
+        });
+    </script>
+</body>
+</html>

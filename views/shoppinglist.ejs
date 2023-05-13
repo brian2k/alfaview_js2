@@ -1,0 +1,151 @@
+<%- include("parts/header") -%>
+
+
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <script>
+                document.write('<a href="' + document.referrer + '">zurück</a>');
+            </script>
+
+            <h5>Eingeloggt als <%= JSON.stringify(user) %></h5><br> 
+            <h2>Einkaufsliste für</h2><br>
+            <!-- ========= DROPDOWN CATEGORIES =========== -->
+            <select id="category">
+                <% for(let i=0; i < categories.length; i++) { %>
+                    <option value="<%= categories[i].id %>"><%= JSON.stringify(categories[i].name) %></option>
+                <% } %>
+            </select>
+            <ul class="shoppinglist">
+                <!-- ========= SHOPPINGLIST ITEMS =========== -->
+
+                <%- include("parts/shoppinglist") -%>
+
+            </ul>
+            <fieldset>
+                <legend>Neuen Einkauf hinzufügen</legend>       
+
+                <div class="inputform">
+                    <input type="text" id="item" placeholder="Artikelname">
+                    <input id="amount" type="number" min="1" max="999" value="1" />
+                </div>
+
+                <button type="submit" id="addItem">Einkauf hinzufügen</button>
+                <button type="submit" class="hidden save" id="save">Änderungen Speichern</button>
+            </fieldset>
+        </div>
+        
+    </div>
+    <script>
+        let category = document.querySelector("#category");  
+        let shoppinglistList = document.querySelector("ul");
+        let groceriesJSON = "<%= JSON.stringify(groceries) %>";
+        groceriesJSON = JSON.parse(groceriesJSON.replaceAll("&#34;","\""));
+
+        let checkboxLabel = document.querySelectorAll(".checkbox_label");
+        let saveButton = document.querySelector("#save");
+        let addGrocery = document.querySelector("#addItem");
+        let newItemInput = document.querySelector("#item");
+        let newItemAmount = document.querySelector("#amount")
+
+        let groceriesAmount = "<%= groceries.length %>";
+        let checkedGroceries = [];
+    
+
+        // ======================
+        // ====== ON ADD NEW ITEM
+        // ======================
+
+        addGrocery.addEventListener("click", function(){
+            if(newItemInput.value){
+                newItemInput.classList.remove("fillmeplease");
+                fetch("/addgrocerie", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({categories: category.value, newitem: newItemInput.value, newitemamount: newItemAmount.value})
+                })
+                .then( newItemAmount.value = 1, newItemInput.value = "")
+                .then(res => res.text())
+                .then( groceries => shoppinglistList.innerHTML = groceries)
+                .catch( err => console.log(err));
+            }else{
+                newItemInput.classList.add("fillmeplease");
+            }
+
+        });
+
+        // ======================
+        // ===== ON CHECKBOX CHANGE STATE
+        // ======================
+        registerCheckboxes();
+
+        // ======================
+        // ======= ON SAVE CHECKED ITEMS
+        // ======================
+
+        saveButton.addEventListener("click", function(){
+            fetch("/checkgrocerie", {
+                    method:     "post",
+                    headers:    { "Content-Type": "application/json" },
+                    body:       JSON.stringify({ categories: (category.value), groceryarray: checkedGroceries }) // id übergeben, um entsprechend json vom server zu laden
+            })
+            .then(res => res.text())
+            .then( groceries => shoppinglistList.innerHTML = groceries)
+            .catch( err => console.log(err));
+
+            saveButton.classList.add("hidden");
+            checkedGroceries = [];
+        });
+        
+        // ======================
+        // ========== ON CATEGORY CHANGE
+        // ======================
+
+        category.addEventListener("change", function() {
+
+            fetch("/showshoppinglist", {
+                method:     "post",
+                headers:    { "Content-Type": "application/json" },
+                body:       JSON.stringify({ categories: (category.value) }) // id übergeben, um entsprechend json vom server zu laden
+            })
+            .then( res => res.text() )
+            .then( groceries => {
+                shoppinglistList.innerHTML = groceries;
+                checkboxLabel = document.querySelectorAll(".checkbox_label");                
+                registerCheckboxes();                
+            })
+            .catch( err => console.log(err));
+
+            toggleEditButton();
+        });
+
+        
+        // =========================
+        // ========== FUNCTIONS ====
+        // =========================
+
+        function toggleEditButton(){
+            if(checkedGroceries.length > 0)
+                    saveButton.classList.remove("hidden");
+                else if(checkedGroceries.length == 0)
+                    saveButton.classList.add("hidden");
+        }
+
+        function registerCheckboxes(){
+            checkboxLabel.forEach(x => {
+                x.addEventListener("mousedown", function() {
+                    if(this.classList.contains("crossed"))                
+                        checkedGroceries.splice(checkedGroceries.indexOf(this.getAttribute("dataid")),1);
+                    else
+                        checkedGroceries.push(this.getAttribute("dataid"));
+
+                    this.classList.toggle("crossed");
+
+                    toggleEditButton();
+                    
+                });
+            });
+        }
+    </script>
+</body>
+</html>

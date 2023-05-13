@@ -1,0 +1,9 @@
+<% for(let j=0; j < groceries.length; j++) { %>
+        <li>
+            <label class="checkbox_label" dataid="<%= groceries[j].id %>">
+                <%= groceries[j].amount %>× <%= groceries[j].item %>
+                <input type="checkbox">
+                <span class="checkbox"></span>
+            </label>
+        </li>
+<% } %>

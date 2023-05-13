@@ -1,0 +1,32 @@
+<%- include("parts/header") -%>
+
+<?php
+    if (!file_exists("./data/menu.json")) {
+        file_put_contents("./data/menu.json", "");
+    }
+?>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <script>
+                document.write('<a href="' + document.referrer + '">zurück</a>');
+            </script>
+
+            <h2>Menü-Kategorie:</h2>
+            <select id="category"></select>
+            <p id="recipe_title"><b>Rezept auswählen:</b></p>
+            <select id="recipes">
+
+            </select>
+            <ul>
+            </ul>
+            <div class="content">
+
+            </div>
+
+        </div>
+        
+    </div>
+
+</body>
+</html>
